@@ -1,0 +1,11 @@
+[
+    {
+        "username": "svasquez_11",
+        "password":  "1234",
+        "photo_perfil": "assets/images/perfil2.jpg"
+    },{
+        "username": "bella_11",
+        "password": "5678",
+        "photo_perfil": "assets/images/perfil2.jpg"
+    }
+]
