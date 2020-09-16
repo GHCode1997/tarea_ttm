@@ -70,9 +70,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
   @override
   Widget build(BuildContext context) {
     
-    return Container(
-       child: Container(),
-    );
+    return Scaffold(body: Image.asset('assets/images/perfil2.jpg'),);
   }
 
   goingTo() async{

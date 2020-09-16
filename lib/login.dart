@@ -45,6 +45,7 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         Scaffold.of(context)
             .showSnackBar(SnackBar(content: Text('Rellene todos los campos')));
+            
       }
   }
 

@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+String photo;
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
 
@@ -11,14 +15,18 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
-  
+  Future<List<dynamic>> lista =  Future<List<dynamic>>.delayed(Duration(seconds: 2));
+
   Future<String> _photo = Future<String>.delayed(
-    Duration(seconds: 2),
+    Duration(seconds: 1),
     () async{
       final SharedPreferences prefs = await _prefs;
+      photo = prefs.getString('photo');
       return prefs.getString('photo');
     },
   );
+
+  
 
   Future<String> _username = Future<String>.delayed(
     Duration(seconds: 2),
@@ -27,22 +35,41 @@ class _HomePageState extends State<HomePage> {
       return prefs.getString('username');
     },
   );
+  @override
+  void initState() { 
+    super.initState();
+    this.getList();
+    this._photo;
+  }
 
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
+      body: 
           DefaultTextStyle(
       style: Theme.of(context).textTheme.headline2,
       textAlign: TextAlign.center,
-      child: FutureBuilder<String>(
-        future: _photo, // a previously-obtained Future<String> or null
-        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+      child: FutureBuilder<List<dynamic>>(
+        future: lista, // a previously-obtained Future<String> or null
+        builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
           List<Widget> children;
           if (snapshot.hasData) {
-             return Image.asset('${snapshot.data}');
+             return ListView.builder(
+               itemCount: snapshot.data.length,
+               itemBuilder:(context,index){
+                 return Card(
+                   child:Row(
+                     children: [
+                       Image.asset(photo,width: 200,height: 200,),
+                       Container(
+                        child: Text(snapshot.data[index]['name']+'\n'+
+                                    snapshot.data[index]['email']+'\n'+
+                                    snapshot.data[index]['username']),
+                      ),
+                       
+                     ],
+                   ),
+                 );
+             } );
 
           } else if (snapshot.hasError) {
             children = <Widget>[
@@ -79,56 +106,17 @@ class _HomePageState extends State<HomePage> {
         },
       ),
     ),
-    DefaultTextStyle(
-      style: Theme.of(context).textTheme.headline2,
-      textAlign: TextAlign.center,
-      child: FutureBuilder<String>(
-        future: _username, // a previously-obtained Future<String> or null
-        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-          List<Widget> children;
-          if (snapshot.hasData) {
-            children= [
-              Text('username: '), 
-              Text('${snapshot.data}')
-              ];
-
-          } else if (snapshot.hasError) {
-            children = <Widget>[
-              Icon(
-                Icons.error_outline,
-                color: Colors.red,
-                size: 60,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Text('Error: ${snapshot.error}'),
-              )
-            ];
-          } else {
-            return Container();
-          }
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: children,
-            ),
-          );
-        },
-      ),
-    ),
-    MaterialButton(
-      child: Text('Cerrar Sesion'),
-      onPressed: () async{
-        Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
-        final SharedPreferences prefs = await _prefs;
-        prefs.setString('username', '');
-        prefs.setString('photo', '');
-        prefs.setBool('sesionActive', false);
-      },
-    )
-        ],
-      )
     );
+  }
+
+  getList(){
+    get(Uri.encodeFull('https://jsonplaceholder.typicode.com/users')).then((response){
+      if(response.statusCode == 200){
+        this.lista = this.lista.then((value){
+          return json.decode(response.body);
+        });
+        setState((){});
+      }
+    });
   }
 }
